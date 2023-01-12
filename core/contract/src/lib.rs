@@ -62,7 +62,7 @@ impl Contract {
         self.betcontext_amounts.insert(new_context_count, Vec::new());
     }
 
-    // Public method - allows placing a bet on a betcontext 
+    // Public method - allows placing a bet on a betcontext but capped at 1 bet per account
     pub fn bet_on_betcontext(&mut self, betcontext_id: u128, bet_choice: u128, amt: u128) {
         assert!(amt > 0, "Amount bet cannot be this low");
         let betcontext_exists = self.betcontext_titles.get(&betcontext_id);
@@ -71,8 +71,17 @@ impl Contract {
         assert!(betcontext_status.is_none(), "Betting has Already Closed!");
         let bet_deductible: Balance = env::attached_deposit();
         assert!(bet_deductible > amt, "Attach at least {} yoctoNEAR", amt);
+       
         let better: AccountId = env::predecessor_account_id();
         let mut bet_vec = self.betcontext_bets.get(&betcontext_id).unwrap().clone();
+        let mut i = 1;
+        while i < 9 {
+            if bet_vec.clone().contains(&(better.clone(), i)){
+                assert!(false, "You have already bet on this!");
+            }
+            i += 1;
+        }
+        
         bet_vec.push((better.clone(), bet_choice.clone()));
         self.betcontext_bets.remove(&betcontext_id);
         self.betcontext_bets.insert(betcontext_id, (bet_vec).clone().to_vec());
@@ -179,6 +188,26 @@ mod tests {
         let acc2: AccountId = "mikky.near".parse().unwrap();
         set_context(acc2, 55*NEAR);
         contract.bet_on_betcontext(1, 3, 50*NEAR);
+        assert_eq!(
+            1,
+            1
+        );
+        // Just checks if the code finishes execution 
+        // and the said steps complete without panicking
+        // This is taken to imply success.
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_double_bet_on_betcontext() {
+        let mut contract = Contract::default();
+        let acc1: AccountId = "admin.near".parse().unwrap();
+        set_context(acc1, 10*NEAR);
+        contract.create_betcontext("Who will score the first goal in Roma vs Milan tomorrow?".to_string());
+        let acc2: AccountId = "mikky.near".parse().unwrap();
+        set_context(acc2, 55*NEAR);
+        contract.bet_on_betcontext(1, 3, 5*NEAR);
+        contract.bet_on_betcontext(1, 3, 30*NEAR);
         assert_eq!(
             1,
             1
