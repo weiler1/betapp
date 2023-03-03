@@ -199,6 +199,23 @@ mod tests {
 
     #[test]
     #[should_panic]
+    fn test_empty_bet_on_betcontext() {
+        let mut contract = Contract::default();
+        let acc1: AccountId = "admin.near".parse().unwrap();
+        set_context(acc1, 10*NEAR);
+        contract.create_betcontext("Who will score the first goal in Roma vs Milan tomorrow?".to_string());
+        let acc2: AccountId = "mikky.near".parse().unwrap();
+        set_context(acc2, 55*NEAR);
+        contract.bet_on_betcontext(1, 3, 0*NEAR);
+        assert_eq!(
+            1,
+            1
+        );
+        
+    }
+
+    #[test]
+    #[should_panic]
     fn test_double_bet_on_betcontext() {
         let mut contract = Contract::default();
         let acc1: AccountId = "admin.near".parse().unwrap();
@@ -237,6 +254,35 @@ mod tests {
         contract.bet_on_betcontext(1, 3, 8*NEAR);
         set_context(acc1.clone(), 10*NEAR);
         let result = contract.close_betcontext(1, 2);
+        assert_eq!(
+            result,
+            13*NEAR
+        );
+       
+    }
+
+     #[test]
+     #[should_panic]
+    fn test_close_closed_betcontext() {
+        let mut contract = Contract::default();
+        let acc1: AccountId = "admin.near".parse().unwrap();
+        set_context(acc1.clone(), 10*NEAR);
+        contract.create_betcontext("Who will win the Grammys this time?".to_string());
+        let acc2: AccountId = "kurt.near".parse().unwrap();
+        set_context(acc2, 10*NEAR);
+        contract.bet_on_betcontext(1, 1, 5*NEAR);
+        let acc3: AccountId = "weiler.near".parse().unwrap();
+        set_context(acc3, 10*NEAR);
+        contract.bet_on_betcontext(1, 2, 7*NEAR);
+        let acc4: AccountId = "brandon.near".parse().unwrap();
+        set_context(acc4, 10*NEAR);
+        contract.bet_on_betcontext(1, 2, 6*NEAR);
+        let acc5: AccountId = "snow.near".parse().unwrap();
+        set_context(acc5, 10*NEAR);
+        contract.bet_on_betcontext(1, 3, 8*NEAR);
+        set_context(acc1.clone(), 10*NEAR);
+        let result = contract.close_betcontext(1, 2);
+        let result = contract.close_betcontext(1, 3);
         assert_eq!(
             result,
             13*NEAR
